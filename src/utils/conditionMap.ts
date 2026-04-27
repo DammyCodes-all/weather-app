@@ -1,57 +1,52 @@
-export type WeatherIconKey =
-  | 'clear-day'
-  | 'clear-night'
-  | 'cloudy'
-  | 'rain'
-  | 'thunderstorm'
-  | 'snow'
-  | 'mist';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+export type WeatherIconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 export interface ConditionMeta {
   label: string;
-  iconComponent: WeatherIconKey;
+  iconName: WeatherIconName;
   gradientColors: [string, string];
 }
 
 const clearDayMeta: ConditionMeta = {
   label: 'Clear',
-  iconComponent: 'clear-day',
+  iconName: 'weather-sunny',
   gradientColors: ['#0A0F2E', '#0D1B4B'],
 };
 
 const clearNightMeta: ConditionMeta = {
   label: 'Clear',
-  iconComponent: 'clear-night',
+  iconName: 'weather-night',
   gradientColors: ['#070B1A', '#0A122B'],
 };
 
 const cloudyMeta: ConditionMeta = {
   label: 'Cloudy',
-  iconComponent: 'cloudy',
+  iconName: 'weather-cloudy',
   gradientColors: ['#0B101B', '#141C2E'],
 };
 
 const rainMeta: ConditionMeta = {
   label: 'Rain',
-  iconComponent: 'rain',
+  iconName: 'weather-rainy',
   gradientColors: ['#0A0E14', '#0F1824'],
 };
 
 const thunderMeta: ConditionMeta = {
   label: 'Thunderstorm',
-  iconComponent: 'thunderstorm',
+  iconName: 'weather-lightning-rainy',
   gradientColors: ['#080A0F', '#0D0F1A'],
 };
 
 const snowMeta: ConditionMeta = {
   label: 'Snow',
-  iconComponent: 'snow',
+  iconName: 'weather-snowy',
   gradientColors: ['#0D1420', '#1C2A3D'],
 };
 
 const mistMeta: ConditionMeta = {
   label: 'Mist',
-  iconComponent: 'mist',
+  iconName: 'weather-fog',
   gradientColors: ['#0B0F17', '#121A24'],
 };
 
