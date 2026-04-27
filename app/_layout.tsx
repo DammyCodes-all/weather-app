@@ -5,8 +5,8 @@ import {
 } from "@expo-google-fonts/ibm-plex-mono";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
+import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { queryClient } from "@/store/queryClient";
@@ -30,7 +30,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <WeatherProvider>
-          <StatusBar style="light" backgroundColor="#080810" />
+          <StatusBar
+            translucent
+            backgroundColor="transparent"
+            barStyle="light-content"
+          />
           <Stack
             screenOptions={{
               contentStyle: { backgroundColor: "#080810" },

@@ -1,71 +1,62 @@
-import { View } from "react-native";
+import { Pressable, View } from 'react-native';
 
-import { ScreenWrapper } from "@/components/ScreenWrapper";
-import { Typography } from "@/components/Typography";
-import { colors, typography } from "@/theme";
-
-const swatches = [
-  { key: "void", value: colors.void },
-  { key: "surface", value: colors.surface },
-  { key: "surface-2", value: colors.surface2 },
-  { key: "accent", value: colors.accent },
-  { key: "warm", value: colors.warm },
-  { key: "text-primary", value: colors.textPrimary },
-  { key: "text-muted", value: colors.textMuted },
-  { key: "text-ghost", value: colors.textGhost },
-] as const;
+import { ScreenWrapper } from '@/components/ScreenWrapper';
+import { Typography } from '@/components/Typography';
+import { ConditionBackground } from '@/features/weather/components/ConditionBackground';
+import { DataStrip } from '@/features/weather/components/DataStrip';
+import { colors, spacing } from '@/theme';
+import { getConditionMeta } from '@/utils/conditionMap';
 
 export default function HomeScreen() {
+  const conditionCode = 800;
+  const isDay = true;
+  const conditionLabel = getConditionMeta(conditionCode, isDay).label;
+
   return (
-    <ScreenWrapper scrollable>
-      <View className="flex-1 gap-8 px-6 py-8">
-        <View className="gap-3">
-          <Typography variant="label" size="xs" color={colors.textMuted}>
-            PHASE 1 TYPOGRAPHY PREVIEW
-          </Typography>
-          <Typography variant="display" size="4xl">
-            24
-          </Typography>
-          <Typography
-            variant="mono"
-            size="sm"
-            color={colors.textMuted}
-            style={{ letterSpacing: 2 }}
-          >
-            CLEAR SKY / WEATHER STATION
-          </Typography>
-          <Typography variant="label" size="base" color={colors.accent}>
-            Unit label sample in IBM Plex Mono Medium
-          </Typography>
-        </View>
+    <ScreenWrapper>
+      <View className="flex-1">
+        <ConditionBackground conditionCode={conditionCode} isDay={isDay} />
 
-        <View className="gap-3">
-          <Typography variant="label" size="xs" color={colors.textMuted}>
-            SIZE SCALE
-          </Typography>
-          {(Object.keys(typography.size) as any).map((sizeKey: any) => (
-            <Typography key={sizeKey} variant="mono" size={sizeKey}>
-              {sizeKey} /{" "}
-              {typography.size[sizeKey as keyof typeof typography.size]}px
-            </Typography>
-          ))}
-        </View>
-
-        <View className="gap-3 pb-8">
-          <Typography variant="label" size="xs" color={colors.textMuted}>
-            COLOR TOKENS
-          </Typography>
-          {swatches.map((swatch) => (
-            <View key={swatch.key} className="flex-row items-center gap-3">
-              <View
-                className="h-10 w-10 rounded-md border border-text-ghost"
-                style={{ backgroundColor: swatch.value }}
-              />
-              <Typography variant="mono" size="sm" color={colors.textPrimary}>
-                {swatch.key} - {swatch.value}
+        <View className="flex-1 px-6">
+          <View className="flex-row items-start justify-between" style={{ marginTop: spacing.sm }}>
+            <View className="gap-1">
+              <Typography variant="display" size="xl" color={colors.textPrimary}>
+                Reykjavik
+              </Typography>
+              <Typography
+                variant="mono"
+                size="xs"
+                color={colors.textMuted}
+                style={{ letterSpacing: 2 }}
+              >
+                WEATHER STATION ALPHA
               </Typography>
             </View>
-          ))}
+
+            <Pressable hitSlop={10}>
+              <Typography variant="label" size="lg" color={colors.textPrimary}>
+                ⌕
+              </Typography>
+            </Pressable>
+          </View>
+
+          <View className="flex-1 items-center justify-center" style={{ marginTop: -40 }}>
+            <Typography variant="display" size="6xl" color={colors.textPrimary}>
+              24
+            </Typography>
+            <Typography
+              variant="mono"
+              size="sm"
+              color={colors.textMuted}
+              style={{ letterSpacing: 3, marginTop: 8 }}
+            >
+              {conditionLabel.toUpperCase()}
+            </Typography>
+          </View>
+
+          <View style={{ paddingBottom: spacing.lg }}>
+            <DataStrip humidity={72} windSpeed={5.2} feelsLike={297.15} unit="C" />
+          </View>
         </View>
       </View>
     </ScreenWrapper>
