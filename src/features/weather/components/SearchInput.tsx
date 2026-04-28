@@ -23,7 +23,7 @@ export function SearchInput({ query, onQueryChange }: SearchInputProps) {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} className="mx-4 flex gap-10">
       <TextInput
         ref={inputRef}
         value={query}
@@ -33,7 +33,7 @@ export function SearchInput({ query, onQueryChange }: SearchInputProps) {
         style={styles.input}
         autoFocus
       />
-      <View style={styles.divider} />
+      <View style={styles.divider} className="mt-10" />
     </View>
   );
 }

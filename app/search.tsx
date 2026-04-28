@@ -79,8 +79,8 @@ export default function SearchScreen() {
     <ScreenWrapper>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Typography variant="display" size="xl" color={colors.textPrimary}>
-            search.
+          <Typography variant="display" size="lg" color={colors.textPrimary}>
+            Find the weather in other locations
           </Typography>
         </View>
 
