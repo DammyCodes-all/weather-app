@@ -1,25 +1,18 @@
-import { View } from 'react-native';
+import { View, StyleSheet, Pressable } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  BottomSheetModal,
+  BottomSheetView,
+  BottomSheetTextInput,
+  BottomSheetScrollView,
+} from "@gorhom/bottom-sheet";
+import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { Typography } from '@/components/Typography';
-import { colors } from '@/theme';
-
-export default function SearchScreen() {
-  return (
-    <ScreenWrapper>
-      <View className="flex-1 items-center justify-center px-6">
-        <Typography variant="display" size="2xl" color={colors.textPrimary}>
-          search.
-        </Typography>
-        <Typography
-          variant="mono"
-          size="sm"
-          color={colors.textMuted}
-          style={{ letterSpacing: 2, marginTop: 10 }}
-        >
-          PHASE 1 ROUTE PLACEHOLDER
-        </Typography>
-      </View>
-    </ScreenWrapper>
-  );
-}
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { Typography } from "@/components/Typography";
+import { colors, spacing } from "@/theme";
+import { SearchInput } from "@/features/weather/components/SearchInput";
+import { SearchResults } from "@/features/weather/components/SearchResults";
+import { RecentSearches } from "@/features/weather/components/RecentSearches";
+import { fetchGeocodingResults

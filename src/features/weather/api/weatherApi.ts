@@ -1,5 +1,13 @@
 import axios, { AxiosError } from "axios";
 
+export interface GeocodingResult {
+  name: string;
+  country: string;
+  state?: string;
+  lat: number;
+  lon: number;
+}
+
 export interface WeatherCondition {
   id: number;
   main: string;
@@ -114,11 +122,7 @@ weatherApi.interceptors.response.use(
         url: error.config?.url ?? "",
       });
     }
-    throw new WeatherApiError(
-      status,
-      getUserMessage(status),
-      responseMessage ?? fallbackMessage,
-    );
+    throw new WeatherApiError(status, getUserMessage(status), responseMessage ?? fallbackMessage);
   },
 );
 
@@ -132,12 +136,34 @@ export const fetchCurrentWeather = async (
   return data;
 };
 
-export const fetchForecast = async (
-  lat: number,
-  lon: number,
-): Promise<ForecastResponse> => {
+export const fetchForecast = async (lat: number, lon: number): Promise<ForecastResponse> => {
   const { data } = await weatherApi.get<ForecastResponse>("/forecast", {
     params: { lat, lon },
   });
   return data;
+};
+
+export const fetchGeocodingResults = async (query: string): Promise<GeocodingResult[]> => {
+  if (!query.trim()) {
+    return [];
+  }
+
+  try {
+    const { data } = await weatherApi.get<GeocodingResult[]>(
+      "https://api.openweathermap.org/geo/1.0/direct",
+      {
+        params: {
+          q: query,
+          limit: 5,
+          appid: process.env.EXPO_PUBLIC_OWM_KEY,
+        },
+      },
+    );
+    return data;
+  } catch (error) {
+    if (__DEV__) {
+      console.error("[GEOCODING ERROR]", error);
+    }
+    throw error;
+  }
 };
