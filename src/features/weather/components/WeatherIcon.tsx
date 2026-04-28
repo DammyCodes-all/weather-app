@@ -9,6 +9,7 @@ interface WeatherIconProps {
   isDay: boolean;
   size?: number;
   color?: string;
+  animated?: boolean;
 }
 
 export function WeatherIcon({
@@ -16,8 +17,13 @@ export function WeatherIcon({
   isDay,
   size = 96,
   color = colors.textPrimary,
+  animated = true,
 }: WeatherIconProps) {
   const { iconName } = getConditionMeta(conditionCode, isDay);
+
+  if (!animated) {
+    return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+  }
 
   return (
     <MotiView

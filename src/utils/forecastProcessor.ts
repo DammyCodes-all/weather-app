@@ -1,9 +1,6 @@
 import { ForecastItem } from "@/features/weather/api/weatherApi";
 import dayjs from "dayjs";
 
-/**
- * Represents a single hourly forecast item
- */
 export interface HourlyItem {
   dt: number; // Unix timestamp
   temp: number; // Kelvin
@@ -11,9 +8,6 @@ export interface HourlyItem {
   isDay: boolean; // Derived from sunrise/sunset (will be set by caller)
 }
 
-/**
- * Represents a daily forecast summary
- */
 export interface DayForecast {
   dt: number; // Unix timestamp of the day (midday entry)
   high: number; // Max temperature for day (Kelvin)
@@ -26,23 +20,21 @@ export function getHourlyForToday(
   list: ForecastItem[],
   nowUnix: number,
 ): HourlyItem[] {
-  const todayDate = dayjs.unix(nowUnix).format("YYYY-MM-DD");
+  const upcoming = list.filter((item) => item.dt >= nowUnix);
+  const source = upcoming.length > 0 ? upcoming : list;
 
-  return list
-    .filter((item) => {
-      const itemDate = dayjs.unix(item.dt).format("YYYY-MM-DD");
-      return itemDate === todayDate; // Only today's items
-    })
-    .slice(0, 8)
-    .map((item) => ({
-      dt: item.dt,
-      temp: item.main.temp,
-      conditionCode: item.weather[0]?.id ?? 800,
-      isDay: true,
-    }));
+  return source.slice(0, 8).map((item) => ({
+    dt: item.dt,
+    temp: item.main.temp,
+    conditionCode: item.weather[0]?.id ?? 800,
+    isDay: true,
+  }));
 }
 
-export function groupByDay(list: ForecastItem[]): DayForecast[] {
+export function groupByDay(
+  list: ForecastItem[],
+  nowUnix: number,
+): DayForecast[] {
   // Group items by calendar day
   const grouped = new Map<string, ForecastItem[]>();
 
@@ -54,8 +46,15 @@ export function groupByDay(list: ForecastItem[]): DayForecast[] {
     grouped.get(dayKey)!.push(item);
   });
 
-  // Convert to array and process each day
-  return Array.from(grouped.entries())
+  const todayKey = dayjs.unix(nowUnix).format("YYYY-MM-DD");
+
+  const futureDays = Array.from(grouped.entries()).filter(
+    ([dayKey]) => dayKey > todayKey,
+  );
+  const daysToRender =
+    futureDays.length > 0 ? futureDays : Array.from(grouped.entries());
+
+  return daysToRender
     .slice(0, 5) // Max 5 days
     .map(([_dayKey, dayItems]) => {
       // Find midday entry (closest to 12:00–15:00)

@@ -1,12 +1,12 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Animated, {
   interpolate,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 
 import { Typography } from "@/components/Typography";
@@ -20,54 +20,22 @@ interface ForecastSectionProps {
   isLoading?: boolean;
 }
 
-/**
- * Collapsible 5-day forecast container
- *
- * Header displays "5-DAY FORECAST" with a chevron (rotates 180° on expand).
- * Content animates in/out via Reanimated maxHeight animation with spring physics.
- * Collapsed by default (progressive disclosure — reduces cognitive load on open).
- *
- * Key technique: Can't animate to 'auto' height in RN, so we measure content height
- * with onLayout callback, then animate maxHeight to that pixel value.
- *
- * Animation details:
- * - Chevron: Reanimated rotation interpolation + withTiming
- * - MaxHeight: withSpring(damping: 18, stiffness: 200) for snappy, controlled feel
- */
 export function ForecastSection({
   forecastData,
   unit,
   isLoading = false,
 }: ForecastSectionProps) {
-  // State: track if section is expanded
   const [isExpanded, setIsExpanded] = useState(false);
-
-  // Shared values for animations
-  const expandedValue = useSharedValue(0); // 0 = collapsed, 1 = expanded
-  const contentHeightRef = useRef(0); // Store measured content height in pixels
+  const expandedValue = useSharedValue(0);
 
   /**
    * When user taps header, toggle expand state
    */
   const handleToggle = async () => {
-    setIsExpanded(!isExpanded);
+    const nextExpanded = !isExpanded;
+    setIsExpanded(nextExpanded);
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    // Animate to 0 or 1
-    expandedValue.value = withSpring(!isExpanded ? 1 : 0, {
-      damping: 18,
-      stiffness: 200,
-    });
-  };
-
-  /**
-   * Measure the content View height when it renders
-   * Store it so we can animate maxHeight to this value
-   */
-  const handleContentLayout = (e: any) => {
-    if (!isLoading) {
-      contentHeightRef.current = e.nativeEvent.layout.height;
-    }
+    expandedValue.value = withTiming(nextExpanded ? 1 : 0, { duration: 220 });
   };
 
   /**
@@ -82,16 +50,9 @@ export function ForecastSection({
     ],
   }));
 
-  /**
-   * Animated styles for content maxHeight
-   * interpolate: 0 (collapsed) → contentHeight (expanded)
-   */
   const contentStyle = useAnimatedStyle(() => ({
-    maxHeight: interpolate(
-      expandedValue.value,
-      [0, 1],
-      [0, contentHeightRef.current || 300], // Fallback to 300 if not measured yet
-    ),
+    maxHeight: interpolate(expandedValue.value, [0, 1], [0, 320]),
+    opacity: interpolate(expandedValue.value, [0, 1], [0, 1]),
   }));
 
   return (
@@ -116,11 +77,13 @@ export function ForecastSection({
         </Animated.View>
       </Pressable>
 
-      {/* Animated content container with clipping */}
+      {/* Animated content container with clipping and internal scroll for overflow */}
       <Animated.View style={[styles.contentWrapper, contentStyle]}>
-        <View
-          style={styles.content}
-          onLayout={handleContentLayout}
+        <ScrollView
+          style={styles.contentScroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
           pointerEvents={isExpanded ? "auto" : "none"}
         >
           {isLoading
@@ -136,10 +99,9 @@ export function ForecastSection({
                   key={`${dayForecast.dt}-${index}`}
                   dayForecast={dayForecast}
                   unit={unit}
-                  index={index}
                 />
               ))}
-        </View>
+        </ScrollView>
       </Animated.View>
     </View>
   );
@@ -162,8 +124,12 @@ const styles = StyleSheet.create({
   contentWrapper: {
     overflow: "hidden",
   },
+  contentScroll: {
+    maxHeight: 320,
+  },
   content: {
     paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
   },
   // Skeleton placeholder styles (for loading state)
   skeletonRow: {
