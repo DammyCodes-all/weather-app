@@ -62,7 +62,7 @@ export default function HomeScreen() {
 
   const forecast = forecastQuery.data;
   const hourlyRaw = forecast ? getHourlyForToday(forecast.list, nowUnix) : [];
-  const dailyRaw = forecast ? groupByDay(forecast.list) : [];
+  const dailyRaw = forecast ? groupByDay(forecast.list, nowUnix) : [];
 
   const sunrise = weather?.sys.sunrise ?? 0;
   const sunset = weather?.sys.sunset ?? 86400;
