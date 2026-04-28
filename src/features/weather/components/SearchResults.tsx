@@ -1,7 +1,6 @@
 import { MotiView, View } from "moti";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, FlatList } from "react-native";
 import * as Haptics from "expo-haptics";
-import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 
 import { GeocodingResult } from "@/features/weather/api/weatherApi";
 import { colors, spacing } from "@/theme";
@@ -16,7 +15,7 @@ interface SearchResultsProps {
 export function SearchResults({ results, onSelectCity, isLoading }: SearchResultsProps) {
   if (isLoading) {
     return (
-      <BottomSheetFlatList
+      <FlatList
         data={Array(5).fill(0)}
         keyExtractor={(_, index) => index.toString()}
         renderItem={() => (
@@ -42,7 +41,7 @@ export function SearchResults({ results, onSelectCity, isLoading }: SearchResult
   }
 
   return (
-    <BottomSheetFlatList
+    <FlatList
       data={results}
       keyExtractor={(item) => `${item.lat}-${item.lon}`}
       renderItem={({ item, index }) => (

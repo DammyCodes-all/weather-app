@@ -1,9 +1,7 @@
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { View, StyleSheet, TextInput } from "react-native";
 import { useEffect, useRef } from "react";
-import { StyleSheet, View } from "react-native";
 
 import { colors, spacing } from "@/theme";
-import { Typography } from "@/components/Typography";
 
 interface SearchInputProps {
   query: string;
@@ -11,13 +9,14 @@ interface SearchInputProps {
 }
 
 export function SearchInput({ query, onQueryChange }: SearchInputProps) {
-  const inputRef = useRef<any>(null);
+  const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     // Focus the input when component mounts
     const timer = setTimeout(() => {
-      // Note: In a real implementation, we would use inputRef.current?.focus()
-      // but we're using useRef correctly here for the component reference
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     }, 300);
 
     return () => clearTimeout(timer);
@@ -25,7 +24,8 @@ export function SearchInput({ query, onQueryChange }: SearchInputProps) {
 
   return (
     <View style={styles.container}>
-      <BottomSheetTextInput
+      <TextInput
+        ref={inputRef}
         value={query}
         onChangeText={onQueryChange}
         placeholder="search city..."
