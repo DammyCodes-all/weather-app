@@ -23,6 +23,8 @@ import { useCurrentWeather } from "@/features/weather/hooks/useCurrentWeather";
 import { useForecast } from "@/features/weather/hooks/useForecast";
 import { ConditionBackground } from "@/features/weather/components/ConditionBackground";
 import { DataStrip } from "@/features/weather/components/DataStrip";
+import { HourlyStrip } from "@/features/weather/components/HourlyStrip";
+import { ForecastSection } from "@/features/weather/components/ForecastSection";
 import { HomeScreenSkeleton } from "@/features/weather/components/HomeScreenSkeleton";
 import { TempDisplay } from "@/features/weather/components/TempDisplay";
 import { WeatherIcon } from "@/features/weather/components/WeatherIcon";
@@ -31,6 +33,7 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { colors, spacing } from "@/theme";
 import { formatFullDate } from "@/utils/formatters";
 import { getConditionMeta } from "@/utils/conditionMap";
+import { getHourlyForToday, groupByDay } from "@/utils/forecastProcessor";
 import { WeatherApiError } from "@/features/weather/api/weatherApi";
 
 export default function HomeScreen() {
@@ -56,6 +59,17 @@ export default function HomeScreen() {
   const feelsLikeKelvin = weather?.main.feels_like ?? 296.65;
   const humidity = weather?.main.humidity ?? 72;
   const windSpeed = weather?.wind.speed ?? 5.2;
+
+  const forecast = forecastQuery.data;
+  const hourlyRaw = forecast ? getHourlyForToday(forecast.list, nowUnix) : [];
+  const dailyRaw = forecast ? groupByDay(forecast.list) : [];
+
+  const sunrise = weather?.sys.sunrise ?? 0;
+  const sunset = weather?.sys.sunset ?? 86400;
+  const hourlyData = hourlyRaw.map((item) => ({
+    ...item,
+    isDay: item.dt >= sunrise && item.dt <= sunset,
+  }));
 
   const unitIndicatorX = useSharedValue(unit === "C" ? 0 : 40);
 
@@ -197,7 +211,6 @@ export default function HomeScreen() {
     <ScreenWrapper>
       <View className="flex-1">
         <ConditionBackground conditionCode={conditionCode} isDay={isDay} />
-
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           refreshControl={
@@ -211,7 +224,8 @@ export default function HomeScreen() {
             />
           }
           showsVerticalScrollIndicator={false}
-                  <View
+        >
+          <View
             className="flex-row items-start justify-between"
             style={{ marginTop: spacing.sm }}
           >
@@ -273,7 +287,6 @@ export default function HomeScreen() {
               </Pressable>
             </View>
           </View>
-
           <View
             className="flex-1 items-center justify-center"
             style={[
@@ -292,7 +305,18 @@ export default function HomeScreen() {
               conditionLabel={conditionLabel}
             />
           </View>
-
+          <View style={{ marginVertical: spacing.lg }}>
+            {hourlyData.length > 0 ? (
+              <HourlyStrip hourlyData={hourlyData} unit={unit} />
+            ) : null}
+          </View>
+          <View style={{ marginVertical: spacing.lg }}>
+            <ForecastSection
+              forecastData={dailyRaw}
+              unit={unit}
+              isLoading={forecastQuery.isLoading}
+            />
+          </View>
           <View style={{ paddingBottom: spacing.lg }}>
             <DataStrip
               humidity={humidity}
