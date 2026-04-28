@@ -1,38 +1,116 @@
-import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+} from "react";
 
-type Unit = 'C' | 'F';
+import { getCurrentCoords, requestLocationPermission } from "@/utils/location";
+
+type Unit = "C" | "F";
 type Coords = { lat: number; lon: number } | null;
+type LocationStatus = "loading" | "granted" | "denied" | "error";
 
-interface WeatherContextValue {
+interface WeatherState {
   unit: Unit;
-  setUnit: (next: Unit) => void;
   coords: Coords;
+  locationStatus: LocationStatus;
+}
+
+type WeatherAction =
+  | { type: "SET_COORDS"; payload: Coords }
+  | { type: "SET_UNIT"; payload: Unit }
+  | { type: "SET_LOCATION_STATUS"; payload: LocationStatus };
+
+interface WeatherContextValue extends WeatherState {
+  dispatch: React.Dispatch<WeatherAction>;
+  setUnit: (next: Unit) => void;
   setCoords: (next: Coords) => void;
 }
+
+const UNIT_STORAGE_KEY = "@weather/unit";
+
+const initialState: WeatherState = {
+  unit: "C",
+  coords: null,
+  locationStatus: "loading",
+};
+
+const weatherReducer = (
+  state: WeatherState,
+  action: WeatherAction,
+): WeatherState => {
+  switch (action.type) {
+    case "SET_COORDS":
+      return { ...state, coords: action.payload };
+    case "SET_UNIT":
+      return { ...state, unit: action.payload };
+    case "SET_LOCATION_STATUS":
+      return { ...state, locationStatus: action.payload };
+    default:
+      return state;
+  }
+};
 
 const WeatherContext = createContext<WeatherContextValue | null>(null);
 
 export function WeatherProvider({ children }: { children: ReactNode }) {
-  const [unit, setUnit] = useState<Unit>('C');
-  const [coords, setCoords] = useState<Coords>(null);
+  const [state, dispatch] = useReducer(weatherReducer, initialState);
+
+  useEffect(() => {
+    const hydrateAndLocate = async () => {
+      try {
+        const storedUnit = await AsyncStorage.getItem(UNIT_STORAGE_KEY);
+        if (storedUnit === "C" || storedUnit === "F") {
+          dispatch({ type: "SET_UNIT", payload: storedUnit });
+        }
+
+        const permission = await requestLocationPermission();
+        if (permission === "denied") {
+          dispatch({ type: "SET_LOCATION_STATUS", payload: "denied" });
+          return;
+        }
+
+        const coords = await getCurrentCoords();
+        dispatch({ type: "SET_COORDS", payload: coords });
+        dispatch({ type: "SET_LOCATION_STATUS", payload: "granted" });
+      } catch {
+        dispatch({ type: "SET_LOCATION_STATUS", payload: "error" });
+      }
+    };
+
+    hydrateAndLocate();
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem(UNIT_STORAGE_KEY, state.unit).catch(() => {});
+  }, [state.unit]);
 
   const value = useMemo(
     () => ({
-      unit,
-      setUnit,
-      coords,
-      setCoords,
+      ...state,
+      dispatch,
+      setUnit: (next: Unit) => dispatch({ type: "SET_UNIT", payload: next }),
+      setCoords: (next: Coords) =>
+        dispatch({ type: "SET_COORDS", payload: next }),
     }),
-    [coords, unit],
+    [state],
   );
 
-  return <WeatherContext.Provider value={value}>{children}</WeatherContext.Provider>;
+  return (
+    <WeatherContext.Provider value={value}>{children}</WeatherContext.Provider>
+  );
 }
 
-export function useWeatherContext() {
+export function useWeatherStore() {
   const context = useContext(WeatherContext);
   if (!context) {
-    throw new Error('useWeatherContext must be used within WeatherProvider');
+    throw new Error("useWeatherStore must be used within WeatherProvider");
   }
   return context;
 }
+
+export const useWeatherContext = useWeatherStore;

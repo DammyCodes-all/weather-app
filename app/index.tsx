@@ -1,35 +1,66 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { useEffect } from 'react';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { MotiView } from "moti";
+import { useEffect } from "react";
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+import { useRouter } from "expo-router";
 
-import { ScreenWrapper } from '@/components/ScreenWrapper';
-import { Typography } from '@/components/Typography';
-import { ConditionBackground } from '@/features/weather/components/ConditionBackground';
-import { DataStrip } from '@/features/weather/components/DataStrip';
-import { TempDisplay } from '@/features/weather/components/TempDisplay';
-import { WeatherIcon } from '@/features/weather/components/WeatherIcon';
-import { useWeatherContext } from '@/store/WeatherContext';
-import { colors, spacing } from '@/theme';
-import { formatFullDate } from '@/utils/formatters';
-import { getConditionMeta } from '@/utils/conditionMap';
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { Typography } from "@/components/Typography";
+import { useCurrentWeather } from "@/features/weather/hooks/useCurrentWeather";
+import { useForecast } from "@/features/weather/hooks/useForecast";
+import { ConditionBackground } from "@/features/weather/components/ConditionBackground";
+import { DataStrip } from "@/features/weather/components/DataStrip";
+import { HomeScreenSkeleton } from "@/features/weather/components/HomeScreenSkeleton";
+import { TempDisplay } from "@/features/weather/components/TempDisplay";
+import { WeatherIcon } from "@/features/weather/components/WeatherIcon";
+import { useWeatherStore } from "@/store/WeatherContext";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { colors, spacing } from "@/theme";
+import { formatFullDate } from "@/utils/formatters";
+import { getConditionMeta } from "@/utils/conditionMap";
+import { WeatherApiError } from "@/features/weather/api/weatherApi";
 
 export default function HomeScreen() {
-  const conditionCode = 800;
-  const isDay = true;
-  const tempKelvin = 297.15;
-  const cityName = 'Reykjavik';
-  const nowUnix = Math.floor(Date.now() / 1000);
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const isWide = width > 430;
+  const { isOnline } = useNetworkStatus();
 
-  const { unit, setUnit } = useWeatherContext();
-  const conditionLabel = getConditionMeta(conditionCode, isDay).label;
-  const unitIndicatorX = useSharedValue(unit === 'C' ? 0 : 40);
+  const { unit, setUnit, coords, locationStatus } = useWeatherStore();
+  const currentWeatherQuery = useCurrentWeather(coords);
+  const forecastQuery = useForecast(coords);
+
+  const weather = currentWeatherQuery.data;
+  const conditionCode = weather?.weather[0]?.id ?? 800;
+  const nowUnix = weather?.dt ?? Math.floor(Date.now() / 1000);
+  const isDay = weather
+    ? weather.dt >= weather.sys.sunrise && weather.dt <= weather.sys.sunset
+    : true;
+  const conditionLabel =
+    weather?.weather[0]?.main ?? getConditionMeta(conditionCode, isDay).label;
+  const cityName = weather?.name ?? "Unknown Station";
+  const tempKelvin = weather?.main.temp ?? 297.15;
+  const feelsLikeKelvin = weather?.main.feels_like ?? 296.65;
+  const humidity = weather?.main.humidity ?? 72;
+  const windSpeed = weather?.wind.speed ?? 5.2;
+
+  const unitIndicatorX = useSharedValue(unit === "C" ? 0 : 40);
 
   useEffect(() => {
-    unitIndicatorX.value = withSpring(unit === 'C' ? 0 : 40, {
+    unitIndicatorX.value = withSpring(unit === "C" ? 0 : 40, {
       damping: 18,
       stiffness: 200,
     });
@@ -39,7 +70,7 @@ export default function HomeScreen() {
     transform: [{ translateX: unitIndicatorX.value }],
   }));
 
-  const handleUnitChange = async (next: 'C' | 'F') => {
+  const handleUnitChange = async (next: "C" | "F") => {
     if (next === unit) {
       return;
     }
@@ -47,15 +78,149 @@ export default function HomeScreen() {
     setUnit(next);
   };
 
+  const handleRefresh = async () => {
+    await Promise.all([currentWeatherQuery.refetch(), forecastQuery.refetch()]);
+  };
+
+  if (locationStatus === "denied") {
+    return (
+      <ScreenWrapper>
+        <View className="flex-1">
+          <ConditionBackground conditionCode={conditionCode} isDay={isDay} />
+          <View className="flex-1 items-center justify-center px-8">
+            <Typography variant="display" size="2xl" color={colors.textPrimary}>
+              location access declined.
+            </Typography>
+            <Typography
+              variant="mono"
+              size="sm"
+              color={colors.textMuted}
+              style={{ marginTop: 12, letterSpacing: 1.2, textAlign: "center" }}
+            >
+              search for a city to get started
+            </Typography>
+            <Pressable
+              onPress={() => router.push("/search")}
+              style={styles.searchPrompt}
+            >
+              <Typography variant="label" size="sm" color={colors.accent}>
+                open city search
+              </Typography>
+            </Pressable>
+          </View>
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  const initialLoading =
+    currentWeatherQuery.isLoading && !currentWeatherQuery.data;
+  if (initialLoading) {
+    return (
+      <ScreenWrapper>
+        <View className="flex-1">
+          <ConditionBackground conditionCode={conditionCode} isDay={isDay} />
+          <HomeScreenSkeleton />
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  const apiError =
+    currentWeatherQuery.error instanceof WeatherApiError
+      ? currentWeatherQuery.error
+      : null;
+  const hasCache = Boolean(currentWeatherQuery.data);
+  const shouldShowError =
+    Boolean(currentWeatherQuery.error) && (!hasCache || isOnline);
+
+  if (shouldShowError) {
+    let title = "something broke.";
+    let subtitle = "we'll try again soon";
+    const showRetry = true;
+
+    if (!isOnline && !hasCache) {
+      title = "no signal.";
+      subtitle = "connect to load weather";
+    } else if (apiError?.code === 429) {
+      title = "slow down.";
+      subtitle = "api limit reached - try in a minute";
+    } else if (apiError?.code === 0) {
+      title = "no signal.";
+      subtitle = "check your connection";
+    }
+
+    return (
+      <ScreenWrapper>
+        <View className="flex-1">
+          <ConditionBackground conditionCode={conditionCode} isDay={isDay} />
+          <View className="flex-1 items-center justify-center px-8">
+            <MotiView
+              from={{ opacity: 0, translateY: 20 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: "timing", duration: 500 }}
+            >
+              <Typography
+                variant="display"
+                size="2xl"
+                color={colors.textPrimary}
+              >
+                {title}
+              </Typography>
+              <Typography
+                variant="mono"
+                size="sm"
+                color={colors.textMuted}
+                style={{
+                  marginTop: 8,
+                  letterSpacing: 1.1,
+                  textAlign: "center",
+                }}
+              >
+                {subtitle}
+              </Typography>
+            </MotiView>
+            {showRetry ? (
+              <Pressable onPress={handleRefresh} style={{ marginTop: 18 }}>
+                <Typography variant="label" size="sm" color={colors.accent}>
+                  retry
+                </Typography>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
   return (
     <ScreenWrapper>
       <View className="flex-1">
         <ConditionBackground conditionCode={conditionCode} isDay={isDay} />
 
-        <View className="flex-1 px-6">
-          <View className="flex-row items-start justify-between" style={{ marginTop: spacing.sm }}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={
+                currentWeatherQuery.isFetching || forecastQuery.isFetching
+              }
+              onRefresh={handleRefresh}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+                  <View
+            className="flex-row items-start justify-between"
+            style={{ marginTop: spacing.sm }}
+          >
             <View className="gap-1">
-              <Typography variant="display" size="xl" color={colors.textPrimary}>
+              <Typography
+                variant="display"
+                size="xl"
+                color={colors.textPrimary}
+              >
                 {cityName}
               </Typography>
               <Typography
@@ -70,28 +235,36 @@ export default function HomeScreen() {
 
             <View style={styles.topActions}>
               <View style={styles.unitToggle}>
-                <Animated.View style={[styles.unitActiveIndicator, indicatorStyle]} />
-                <Pressable style={styles.unitOption} onPress={() => handleUnitChange('C')}>
+                <Animated.View
+                  style={[styles.unitActiveIndicator, indicatorStyle]}
+                />
+                <Pressable
+                  style={styles.unitOption}
+                  onPress={() => handleUnitChange("C")}
+                >
                   <Typography
                     variant="label"
                     size="xs"
-                    color={unit === 'C' ? colors.textPrimary : colors.textMuted}
+                    color={unit === "C" ? colors.textPrimary : colors.textMuted}
                   >
                     °C
                   </Typography>
                 </Pressable>
-                <Pressable style={styles.unitOption} onPress={() => handleUnitChange('F')}>
+                <Pressable
+                  style={styles.unitOption}
+                  onPress={() => handleUnitChange("F")}
+                >
                   <Typography
                     variant="label"
                     size="xs"
-                    color={unit === 'F' ? colors.textPrimary : colors.textMuted}
+                    color={unit === "F" ? colors.textPrimary : colors.textMuted}
                   >
                     °F
                   </Typography>
                 </Pressable>
               </View>
 
-              <Pressable hitSlop={10}>
+              <Pressable hitSlop={10} onPress={() => router.push("/search")}>
                 <MaterialCommunityIcons
                   name="magnify"
                   size={24}
@@ -103,16 +276,32 @@ export default function HomeScreen() {
 
           <View
             className="flex-1 items-center justify-center"
-            style={[styles.heroWrap, isWide ? styles.heroWide : styles.heroStack]}
+            style={[
+              styles.heroWrap,
+              isWide ? styles.heroWide : styles.heroStack,
+            ]}
           >
-            <WeatherIcon conditionCode={conditionCode} isDay={isDay} size={180} />
-            <TempDisplay tempKelvin={tempKelvin} unit={unit} conditionLabel={conditionLabel} />
+            <WeatherIcon
+              conditionCode={conditionCode}
+              isDay={isDay}
+              size={180}
+            />
+            <TempDisplay
+              tempKelvin={tempKelvin}
+              unit={unit}
+              conditionLabel={conditionLabel}
+            />
           </View>
 
           <View style={{ paddingBottom: spacing.lg }}>
-            <DataStrip humidity={72} windSpeed={5.2} feelsLike={296.65} unit={unit} />
+            <DataStrip
+              humidity={humidity}
+              windSpeed={windSpeed}
+              feelsLike={feelsLikeKelvin}
+              unit={unit}
+            />
           </View>
-        </View>
+        </ScrollView>
       </View>
     </ScreenWrapper>
   );
@@ -120,8 +309,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   topActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.md,
   },
   unitToggle: {
@@ -129,13 +318,13 @@ const styles = StyleSheet.create({
     height: 34,
     borderRadius: 9999,
     padding: 3,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.surface2,
-    position: 'relative',
+    position: "relative",
   },
   unitActiveIndicator: {
-    position: 'absolute',
+    position: "absolute",
     width: 36,
     height: 28,
     borderRadius: 9999,
@@ -146,8 +335,8 @@ const styles = StyleSheet.create({
   unitOption: {
     flex: 1,
     zIndex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     height: 28,
   },
   heroWrap: {
@@ -155,12 +344,23 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   heroStack: {
-    flexDirection: 'column',
+    flexDirection: "column",
   },
   heroWide: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-evenly",
+    width: "100%",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.lg,
+  },
+  searchPrompt: {
+    marginTop: 20,
+    borderRadius: 9999,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: colors.surface2,
   },
 });
