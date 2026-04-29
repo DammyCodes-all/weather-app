@@ -91,10 +91,6 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
     AsyncStorage.setItem(UNIT_STORAGE_KEY, state.unit).catch(() => {});
   }, [state.unit]);
 
-  if (isHydrating) {
-    return null;
-  }
-
   const value = useMemo(
     () => ({
       ...state,

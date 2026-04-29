@@ -30,13 +30,14 @@ export function ForecastRow({ dayForecast, unit }: ForecastRowProps) {
 
   const handlePressIn = () => {
     scale.value = withSpring(0.98, { damping: 20, stiffness: 300 });
-    backgroundColor.value = withSpring(colors.surface2, { damping: 20, stiffness: 300 });
+    backgroundColor.value = withSpring("#0F0F1A", { damping: 20, stiffness: 300 });
     Haptics.impactAsync().catch(() => {});
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 20, stiffness: 300 });
-    backgroundColor.value = withSpring(colors.surface, { damping: 20, stiffness: 300 });
+    scale.value = withSpring(1, { damping: 20 });
+    backgroundColor.value = withSpring("#0F0F1A", { damping: 20, stiffness: 300 });
+    Haptics.impactAsync().catch(() => {});
   };
 
   return (
