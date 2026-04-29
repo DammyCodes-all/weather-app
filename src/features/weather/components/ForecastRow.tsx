@@ -1,4 +1,6 @@
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 
 import { Typography } from "@/components/Typography";
 import { WeatherIcon } from "@/features/weather/components/WeatherIcon";
@@ -12,65 +14,86 @@ interface ForecastRowProps {
 }
 
 export function ForecastRow({ dayForecast, unit }: ForecastRowProps) {
-  const dayName = formatDay(dayForecast.dt); // "MON", "TUE", etc.
-  const highTemp = formatTemp(dayForecast.high, unit); // "24°"
-  const lowTemp = formatTemp(dayForecast.low, unit); // "18°"
-  const precipPercent = Math.round(dayForecast.precipChance * 100); // 65
-  const showPrecip = precipPercent > 20; // Only show if meaningful
+  const dayName = formatDay(dayForecast.dt);
+  const highTemp = formatTemp(dayForecast.high, unit);
+  const lowTemp = formatTemp(dayForecast.low, unit);
+  const precipPercent = Math.round(dayForecast.precipChance * 100);
+  const showPrecip = precipPercent > 20;
+
+  const scale = useSharedValue(1);
+  const backgroundColor = useSharedValue(colors.surface);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    backgroundColor: backgroundColor.value,
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.98, { damping: 20, stiffness: 300 });
+    backgroundColor.value = withSpring(colors.surface2, { damping: 20, stiffness: 300 });
+    Haptics.impactAsync().catch(() => {});
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 20, stiffness: 300 });
+    backgroundColor.value = withSpring(colors.surface, { damping: 20, stiffness: 300 });
+  };
 
   return (
-    <View>
-      {/* Row container: flex row with items */}
-      <View style={styles.row}>
-        {/* Day name (left) */}
-        <Typography
-          variant="label"
-          size="sm"
-          color={colors.textMuted}
-          style={styles.dayName}
-        >
-          {dayName}
-        </Typography>
+    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut}>
+      <Animated.View style={[styles.container, animatedStyle]}>
+        {/* Row container: flex row with items */}
+        <View style={styles.row}>
+          {/* Day name (left) */}
+          <Typography variant="label" size="sm" color={colors.textMuted} style={styles.dayName}>
+            {dayName}
+          </Typography>
 
-        {/* Weather icon (30px) */}
-        <View style={styles.icon}>
-          <WeatherIcon
-            conditionCode={dayForecast.conditionCode}
-            isDay={true}
-            size={30}
-          />
+          {/* Weather icon (30px) */}
+          <View style={styles.icon}>
+            <WeatherIcon
+              conditionCode={dayForecast.conditionCode}
+              isDay={true}
+              size={30}
+              animated={false}
+            />
+          </View>
+
+          {/* High/Low temps: "24° / 18°" */}
+          <Typography
+            variant="display"
+            size="xs"
+            color={colors.textPrimary}
+            style={styles.tempRange}
+          >
+            {highTemp} / {lowTemp}
+          </Typography>
+
+          {/* Precipitation % (right, only if > 20%) */}
+          {showPrecip ? (
+            <Typography
+              variant="mono"
+              size="xs"
+              color={colors.textMuted}
+              style={styles.precipPercent}
+            >
+              {precipPercent}%
+            </Typography>
+          ) : null}
         </View>
 
-        {/* High/Low temps: "24° / 18°" */}
-        <Typography
-          variant="display"
-          size="xs"
-          color={colors.textPrimary}
-          style={styles.tempRange}
-        >
-          {highTemp} / {lowTemp}
-        </Typography>
-
-        {/* Precipitation % (right, only if > 20%) */}
-        {showPrecip ? (
-          <Typography
-            variant="mono"
-            size="xs"
-            color={colors.textMuted}
-            style={styles.precipPercent}
-          >
-            {precipPercent}%
-          </Typography>
-        ) : null}
-      </View>
-
-      {/* Thin horizontal divider below row */}
-      <View style={styles.divider} />
-    </View>
+        {/* Thin horizontal divider below row */}
+        <View style={styles.divider} />
+      </Animated.View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    borderRadius: 8,
+    padding: spacing.sm,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
