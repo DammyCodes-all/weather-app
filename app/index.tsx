@@ -18,6 +18,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 
+import { getCurrentCoords } from "@/utils/location";
 import { ScreenWrapper } from "@/components/ScreenWrapper";
 import { Typography } from "@/components/Typography";
 import { useCurrentWeather } from "@/features/weather/hooks/useCurrentWeather";
@@ -75,6 +76,8 @@ export default function HomeScreen() {
   const unitIndicatorX = useSharedValue(unit === "C" ? 0 : 40);
   const scrollY = useSharedValue(0);
 
+  const { isUsingCurrentLocation, setCoords, setUsingCurrentLocation } = useWeatherStore();
+
   useEffect(() => {
     unitIndicatorX.value = withSpring(unit === "C" ? 0 : 40, {
       damping: 18,
@@ -106,6 +109,18 @@ export default function HomeScreen() {
 
   const handleRefresh = async () => {
     await Promise.all([currentWeatherQuery.refetch(), forecastQuery.refetch()]);
+  };
+
+  const handleReturnToCurrentLocation = async () => {
+    if (!isUsingCurrentLocation) {
+      try {
+        const coords = await getCurrentCoords();
+        setCoords(coords);
+        setUsingCurrentLocation(true);
+      } catch (error) {
+        console.error("Error getting current location:", error);
+      }
+    }
   };
 
   if (locationStatus === "denied") {
@@ -300,6 +315,24 @@ export default function HomeScreen() {
               unit={unit}
             />
           </View>
+
+          {!isUsingCurrentLocation && (
+            <View style={{ marginVertical: spacing.lg, alignItems: "center" }}>
+              <Pressable
+                style={styles.currentLocationButton}
+                onPress={handleReturnToCurrentLocation}
+              >
+                <Typography
+                  variant="label"
+                  size="sm"
+                  color={colors.textMuted}
+                  style={{ textAlign: "center" }}
+                >
+                  Return to Current Location
+                </Typography>
+              </Pressable>
+            </View>
+          )}
         </ScrollView>
       </View>
     </ScreenWrapper>
@@ -363,6 +396,11 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     paddingVertical: 10,
     paddingHorizontal: 18,
+    backgroundColor: colors.surface2,
+  },
+  currentLocationButton: {
+    padding: 10,
+    borderRadius: 99,
     backgroundColor: colors.surface2,
   },
 });

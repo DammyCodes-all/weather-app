@@ -1,4 +1,4 @@
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, StyleSheet, View, Text } from "react-native";
 import { MotiView } from "moti";
 
 import { Typography } from "@/components/Typography";
@@ -23,13 +23,20 @@ export function TempDisplay({ tempKelvin, unit, conditionLabel }: TempDisplayPro
         animate={{ opacity: 1, translateY: 0 }}
         transition={{ type: "timing", duration: 600 }}
       >
-        <Typography
-          variant="display"
-          color={colors.textPrimary}
-          style={[styles.tempNumber, { fontSize: displaySize }]}
-        >
-          {tempValue}
-        </Typography>
+        <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+          <Typography
+            variant="display"
+            color={colors.textPrimary}
+            style={[styles.tempNumber, { fontSize: displaySize }]}
+          >
+            {tempValue}
+          </Typography>
+          <Text
+            style={[styles.unit, { fontSize: displaySize * 0.3, lineHeight: displaySize * 0.3 }]}
+          >
+            °{unit}
+          </Text>
+        </View>
       </MotiView>
       <MotiView
         from={{ opacity: 0, translateY: 30 }}
@@ -54,5 +61,13 @@ const styles = StyleSheet.create({
   conditionLabel: {
     letterSpacing: 3,
     marginTop: 10,
+  },
+  unit: {
+    fontFamily: "IBMPlexMono_400Regular",
+    fontWeight: "600",
+    position: "relative",
+    top: 2,
+    lineHeight: 1,
+    color: "white",
   },
 });
