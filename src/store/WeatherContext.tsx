@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useState,
 } from "react";
 
 import { getCurrentCoords, requestLocationPermission } from "@/utils/location";
@@ -39,10 +40,7 @@ const initialState: WeatherState = {
   locationStatus: "loading",
 };
 
-const weatherReducer = (
-  state: WeatherState,
-  action: WeatherAction,
-): WeatherState => {
+const weatherReducer = (state: WeatherState, action: WeatherAction): WeatherState => {
   switch (action.type) {
     case "SET_COORDS":
       return { ...state, coords: action.payload };
@@ -59,6 +57,7 @@ const WeatherContext = createContext<WeatherContextValue | null>(null);
 
 export function WeatherProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(weatherReducer, initialState);
+  const [isHydrating, setIsHydrating] = useState(true);
 
   useEffect(() => {
     const hydrateAndLocate = async () => {
@@ -71,14 +70,17 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
         const permission = await requestLocationPermission();
         if (permission === "denied") {
           dispatch({ type: "SET_LOCATION_STATUS", payload: "denied" });
+          setIsHydrating(false);
           return;
         }
 
         const coords = await getCurrentCoords();
         dispatch({ type: "SET_COORDS", payload: coords });
         dispatch({ type: "SET_LOCATION_STATUS", payload: "granted" });
+        setIsHydrating(false);
       } catch {
         dispatch({ type: "SET_LOCATION_STATUS", payload: "error" });
+        setIsHydrating(false);
       }
     };
 
@@ -89,20 +91,21 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
     AsyncStorage.setItem(UNIT_STORAGE_KEY, state.unit).catch(() => {});
   }, [state.unit]);
 
+  if (isHydrating) {
+    return null;
+  }
+
   const value = useMemo(
     () => ({
       ...state,
       dispatch,
       setUnit: (next: Unit) => dispatch({ type: "SET_UNIT", payload: next }),
-      setCoords: (next: Coords) =>
-        dispatch({ type: "SET_COORDS", payload: next }),
+      setCoords: (next: Coords) => dispatch({ type: "SET_COORDS", payload: next }),
     }),
     [state],
   );
 
-  return (
-    <WeatherContext.Provider value={value}>{children}</WeatherContext.Provider>
-  );
+  return <WeatherContext.Provider value={value}>{children}</WeatherContext.Provider>;
 }
 
 export function useWeatherStore() {

@@ -228,7 +228,7 @@ export default function HomeScreen() {
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View style={[styles.header, parallaxStyle]}>
+          <Animated.View style={[styles.headerContainer, parallaxStyle]}>
             <View
               className="flex-row items-start justify-between"
               style={{ marginTop: spacing.sm }}
@@ -355,6 +355,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: spacing.lg,
+  },
+  headerContainer: {
+    // No additional styling needed, inherits from parent
   },
   searchPrompt: {
     marginTop: 20,
