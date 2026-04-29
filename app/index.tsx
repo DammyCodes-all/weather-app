@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import Animated, {
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -28,6 +29,7 @@ import { ForecastSection } from "@/features/weather/components/ForecastSection";
 import { HomeScreenSkeleton } from "@/features/weather/components/HomeScreenSkeleton";
 import { TempDisplay } from "@/features/weather/components/TempDisplay";
 import { WeatherIcon } from "@/features/weather/components/WeatherIcon";
+import { OfflineBanner } from "@/features/weather/components/OfflineBanner";
 import { useWeatherStore } from "@/store/WeatherContext";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { colors, spacing } from "@/theme";
@@ -52,8 +54,7 @@ export default function HomeScreen() {
   const isDay = weather
     ? weather.dt >= weather.sys.sunrise && weather.dt <= weather.sys.sunset
     : true;
-  const conditionLabel =
-    weather?.weather[0]?.main ?? getConditionMeta(conditionCode, isDay).label;
+  const conditionLabel = weather?.weather[0]?.main ?? getConditionMeta(conditionCode, isDay).label;
   const cityName = weather?.name ?? "Unknown Station";
   const tempKelvin = weather?.main.temp ?? 297.15;
   const feelsLikeKelvin = weather?.main.feels_like ?? 296.65;
@@ -72,6 +73,7 @@ export default function HomeScreen() {
   }));
 
   const unitIndicatorX = useSharedValue(unit === "C" ? 0 : 40);
+  const scrollY = useSharedValue(0);
 
   useEffect(() => {
     unitIndicatorX.value = withSpring(unit === "C" ? 0 : 40, {
@@ -79,6 +81,16 @@ export default function HomeScreen() {
       stiffness: 200,
     });
   }, [unit, unitIndicatorX]);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const parallaxStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -scrollY.value * 0.4 }],
+  }));
 
   const indicatorStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: unitIndicatorX.value }],
@@ -101,6 +113,7 @@ export default function HomeScreen() {
       <ScreenWrapper>
         <View className="flex-1">
           <ConditionBackground conditionCode={conditionCode} isDay={isDay} />
+          <OfflineBanner isOnline={isOnline} />
           <View className="flex-1 items-center justify-center px-8">
             <Typography variant="display" size="2xl" color={colors.textPrimary}>
               location access declined.
@@ -113,10 +126,7 @@ export default function HomeScreen() {
             >
               search for a city to get started
             </Typography>
-            <Pressable
-              onPress={() => router.push("/search")}
-              style={styles.searchPrompt}
-            >
+            <Pressable onPress={() => router.push("/search")} style={styles.searchPrompt}>
               <Typography variant="label" size="sm" color={colors.accent}>
                 open city search
               </Typography>
@@ -127,8 +137,7 @@ export default function HomeScreen() {
     );
   }
 
-  const initialLoading =
-    currentWeatherQuery.isLoading && !currentWeatherQuery.data;
+  const initialLoading = currentWeatherQuery.isLoading && !currentWeatherQuery.data;
   if (initialLoading) {
     return (
       <ScreenWrapper>
@@ -141,12 +150,9 @@ export default function HomeScreen() {
   }
 
   const apiError =
-    currentWeatherQuery.error instanceof WeatherApiError
-      ? currentWeatherQuery.error
-      : null;
+    currentWeatherQuery.error instanceof WeatherApiError ? currentWeatherQuery.error : null;
   const hasCache = Boolean(currentWeatherQuery.data);
-  const shouldShowError =
-    Boolean(currentWeatherQuery.error) && (!hasCache || isOnline);
+  const shouldShowError = Boolean(currentWeatherQuery.error) && (!hasCache || isOnline);
 
   if (shouldShowError) {
     let title = "something broke.";
@@ -174,11 +180,7 @@ export default function HomeScreen() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ type: "timing", duration: 500 }}
             >
-              <Typography
-                variant="display"
-                size="2xl"
-                color={colors.textPrimary}
-              >
+              <Typography variant="display" size="2xl" color={colors.textPrimary}>
                 {title}
               </Typography>
               <Typography
@@ -211,104 +213,78 @@ export default function HomeScreen() {
     <ScreenWrapper>
       <View className="flex-1">
         <ConditionBackground conditionCode={conditionCode} isDay={isDay} />
+        <OfflineBanner isOnline={isOnline} />
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           refreshControl={
             <RefreshControl
-              refreshing={
-                currentWeatherQuery.isFetching || forecastQuery.isFetching
-              }
+              refreshing={currentWeatherQuery.isFetching || forecastQuery.isFetching}
               onRefresh={handleRefresh}
               tintColor={colors.accent}
               colors={[colors.accent]}
             />
           }
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
         >
-          <View
-            className="flex-row items-start justify-between"
-            style={{ marginTop: spacing.sm }}
-          >
-            <View className="gap-1">
-              <Typography
-                variant="display"
-                size="xl"
-                color={colors.textPrimary}
-              >
-                {cityName}
-              </Typography>
-              <Typography
-                variant="mono"
-                size="xs"
-                color={colors.textMuted}
-                style={{ letterSpacing: 2 }}
-              >
-                {formatFullDate(nowUnix).toUpperCase()}
-              </Typography>
-            </View>
-
-            <View style={styles.topActions}>
-              <View style={styles.unitToggle}>
-                <Animated.View
-                  style={[styles.unitActiveIndicator, indicatorStyle]}
-                />
-                <Pressable
-                  style={styles.unitOption}
-                  onPress={() => handleUnitChange("C")}
+          <Animated.View style={[styles.header, parallaxStyle]}>
+            <View
+              className="flex-row items-start justify-between"
+              style={{ marginTop: spacing.sm }}
+            >
+              <View className="gap-1">
+                <Typography variant="display" size="xl" color={colors.textPrimary}>
+                  {cityName}
+                </Typography>
+                <Typography
+                  variant="mono"
+                  size="xs"
+                  color={colors.textMuted}
+                  style={{ letterSpacing: 2 }}
                 >
-                  <Typography
-                    variant="label"
-                    size="xs"
-                    color={unit === "C" ? colors.textPrimary : colors.textMuted}
-                  >
-                    °C
-                  </Typography>
-                </Pressable>
-                <Pressable
-                  style={styles.unitOption}
-                  onPress={() => handleUnitChange("F")}
-                >
-                  <Typography
-                    variant="label"
-                    size="xs"
-                    color={unit === "F" ? colors.textPrimary : colors.textMuted}
-                  >
-                    °F
-                  </Typography>
-                </Pressable>
+                  {formatFullDate(nowUnix).toUpperCase()}
+                </Typography>
               </View>
 
-              <Pressable hitSlop={10} onPress={() => router.push("/search")}>
-                <MaterialCommunityIcons
-                  name="magnify"
-                  size={24}
-                  color={colors.textPrimary}
-                />
-              </Pressable>
+              <View style={styles.topActions}>
+                <View style={styles.unitToggle}>
+                  <Animated.View style={[styles.unitActiveIndicator, indicatorStyle]} />
+                  <Pressable style={styles.unitOption} onPress={() => handleUnitChange("C")}>
+                    <Typography
+                      variant="label"
+                      size="xs"
+                      color={unit === "C" ? colors.textPrimary : colors.textMuted}
+                    >
+                      °C
+                    </Typography>
+                  </Pressable>
+                  <Pressable style={styles.unitOption} onPress={() => handleUnitChange("F")}>
+                    <Typography
+                      variant="label"
+                      size="xs"
+                      color={unit === "F" ? colors.textPrimary : colors.textMuted}
+                    >
+                      °F
+                    </Typography>
+                  </Pressable>
+                </View>
+
+                <Pressable hitSlop={10} onPress={() => router.push("/search")}>
+                  <MaterialCommunityIcons name="magnify" size={24} color={colors.textPrimary} />
+                </Pressable>
+              </View>
             </View>
-          </View>
+          </Animated.View>
           <View
             className="flex-1 items-center justify-center"
-            style={[
-              styles.heroWrap,
-              isWide ? styles.heroWide : styles.heroStack,
-            ]}
+            style={[styles.heroWrap, isWide ? styles.heroWide : styles.heroStack]}
           >
-            <WeatherIcon
-              conditionCode={conditionCode}
-              isDay={isDay}
-              size={180}
-            />
-            <TempDisplay
-              tempKelvin={tempKelvin}
-              unit={unit}
-              conditionLabel={conditionLabel}
-            />
+            <WeatherIcon conditionCode={conditionCode} isDay={isDay} size={180} />
+            <TempDisplay tempKelvin={tempKelvin} unit={unit} conditionLabel={conditionLabel} />
           </View>
           <View style={{ marginVertical: spacing.lg }}>
-            {hourlyData.length > 0 ? (
-              <HourlyStrip hourlyData={hourlyData} unit={unit} />
-            ) : null}
+            {hourlyData.length > 0 ? <HourlyStrip hourlyData={hourlyData} unit={unit} /> : null}
           </View>
           <View style={{ marginVertical: spacing.lg }}>
             <ForecastSection
