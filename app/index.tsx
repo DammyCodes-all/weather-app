@@ -224,7 +224,6 @@ export default function HomeScreen() {
               colors={[colors.accent]}
             />
           }
-          onScroll={scrollHandler}
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
         >
