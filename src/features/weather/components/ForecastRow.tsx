@@ -22,7 +22,7 @@ export function ForecastRow({ dayForecast, unit }: ForecastRowProps) {
     <View>
       {/* Row container: flex row with items */}
       <View style={styles.row}>
-        <Typography variant="label" size={"sm"} color={colors.textMuted} style={styles.dayName}>
+        <Typography variant="label" size="sm" color={colors.textMuted} style={styles.dayName}>
           {dayName}
         </Typography>
 
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   dayName: {
     width: Platform.OS === "web" ? 40 : 36,
     letterSpacing: 1.5,
-  }
+  },
   icon: {
     width: Platform.OS === "web" ? 40 : 30,
     height: Platform.OS === "web" ? 40 : 30,
