@@ -1,7 +1,9 @@
 {
   "name": "weather-app",
-  "main": "expo-router/entry",
+  "main": "main.js",
   "version": "1.0.0",
+  "description": "A high-performance weather tracking desktop and mobile application built with Expo and Electron.",
+  "author": "Olagunju Al-ameen",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -73,6 +75,7 @@
   "config": {
     "forge": {
       "packagerConfig": {
+        "entryPoint": "./main.js",
         "prune": false,
         "ignore": [
           "\\.git",
@@ -86,6 +89,10 @@
       "makers": [
         {
           "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "electron-forge-maker-appimage",
           "config": {}
         },
         {
