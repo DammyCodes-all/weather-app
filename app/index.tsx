@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import {
   Platform,
   Pressable,
@@ -39,6 +39,7 @@ import { formatFullDate } from "@/utils/formatters";
 import { getConditionMeta } from "@/utils/conditionMap";
 import { getHourlyForToday, groupByDay } from "@/utils/forecastProcessor";
 import { WeatherApiError } from "@/features/weather/api/weatherApi";
+import { useKeyboardShortcuts } from "@/components/KeyboardShortcutsHandler";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -86,12 +87,6 @@ export default function HomeScreen() {
     });
   }, [unit, unitIndicatorX]);
 
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-    },
-  });
-
   const parallaxStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: -scrollY.value * 0.4 }],
   }));
@@ -111,6 +106,8 @@ export default function HomeScreen() {
   const handleRefresh = async () => {
     await Promise.all([currentWeatherQuery.refetch(), forecastQuery.refetch()]);
   };
+
+  useKeyboardShortcuts({ onRefresh: handleRefresh });
 
   const handleReturnToCurrentLocation = async () => {
     if (!isUsingCurrentLocation) {
@@ -342,6 +339,7 @@ export default function HomeScreen() {
               <Pressable
                 style={styles.currentLocationButton}
                 onPress={handleReturnToCurrentLocation}
+                className="hover:bg-slate-800/80 transition-all duration-200"
               >
                 <Typography
                   variant="label"

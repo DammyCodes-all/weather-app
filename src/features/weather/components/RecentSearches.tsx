@@ -52,7 +52,11 @@ export function RecentSearches({ onRemove, onSelect, onRemoveComplete }: RecentS
                 {city.state ? `, ${city.state}` : ""}
               </Typography>
             </Pressable>
-            <Pressable style={styles.removeButton} onPress={() => onRemoveComplete(index)}>
+            <Pressable
+              style={styles.removeButton}
+              onPress={() => onRemoveComplete(index)}
+              className="p-1 rounded-full hover:bg-white/10"
+            >
               <Typography variant="label" size="sm" color={colors.textMuted}>
                 ×
               </Typography>
