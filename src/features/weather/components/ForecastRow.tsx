@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
 import { Typography } from "@/components/Typography";
 import { WeatherIcon } from "@/features/weather/components/WeatherIcon";
@@ -22,8 +22,7 @@ export function ForecastRow({ dayForecast, unit }: ForecastRowProps) {
     <View>
       {/* Row container: flex row with items */}
       <View style={styles.row}>
-        {/* Day name (left) */}
-        <Typography variant="label" size="sm" color={colors.textMuted} style={styles.dayName}>
+        <Typography variant="label" size={"sm"} color={colors.textMuted} style={styles.dayName}>
           {dayName}
         </Typography>
 
@@ -32,13 +31,18 @@ export function ForecastRow({ dayForecast, unit }: ForecastRowProps) {
           <WeatherIcon
             conditionCode={dayForecast.conditionCode}
             isDay={true}
-            size={30}
+            size={Platform.OS === "web" ? 40 : 30}
             animated={false}
           />
         </View>
 
         {/* High/Low temps: "24° / 18°" */}
-        <Typography variant="display" size="xs" color={colors.textPrimary} style={styles.tempRange}>
+        <Typography
+          variant="display"
+          size={Platform.OS === "web" ? "sm" : "xs"}
+          color={colors.textPrimary}
+          style={styles.tempRange}
+        >
           {highTemp} / {lowTemp}
         </Typography>
 
@@ -46,7 +50,7 @@ export function ForecastRow({ dayForecast, unit }: ForecastRowProps) {
         {showPrecip ? (
           <Typography
             variant="mono"
-            size="xs"
+            size={Platform.OS === "web" ? "sm" : "xs"}
             color={colors.textMuted}
             style={styles.precipPercent}
           >
@@ -69,12 +73,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   dayName: {
-    width: 36,
+    width: Platform.OS === "web" ? 40 : 36,
     letterSpacing: 1.5,
-  },
+  }
   icon: {
-    width: 30,
-    height: 30,
+    width: Platform.OS === "web" ? 40 : 30,
+    height: Platform.OS === "web" ? 40 : 30,
     justifyContent: "center",
     alignItems: "center",
   },
