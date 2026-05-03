@@ -121,7 +121,7 @@ export default function HomeScreen() {
     }
   };
 
-  if (locationStatus === "denied") {
+  if (locationStatus === "denied" && !coords) {
     return (
       <ScreenWrapper>
         <View className="flex-1">
@@ -138,7 +138,8 @@ export default function HomeScreen() {
                 color={colors.textMuted}
                 style={{ marginTop: 12, letterSpacing: 1.2, textAlign: "center" }}
               >
-                search for a city to get started
+                search for a city to get started. use{" "}
+                {Platform.OS === "web" ? "ctrl + s" : "the search button"} to open search
               </Typography>
             </Animated.View>
             <Pressable onPress={() => router.push("/search")} style={styles.searchPrompt}>
