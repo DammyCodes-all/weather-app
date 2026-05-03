@@ -290,13 +290,20 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
           <View
-            className={`flex-1 items-center justify-center my-4 ${Platform.OS === "web" ? "flex-col gap-4" : ""}`}
+            className={`flex-1 items-center justify-center my-2 ${Platform.OS === "web" ? "flex-col gap-2" : ""}`}
             style={[styles.heroWrap, isWide ? styles.heroWide : styles.heroStack]}
           >
-            <WeatherIcon conditionCode={conditionCode} isDay={isDay} size={180} />
+            <WeatherIcon
+              conditionCode={conditionCode}
+              isDay={isDay}
+              size={Platform.OS === "web" ? 220 : 180}
+            />
             <TempDisplay tempKelvin={tempKelvin} unit={unit} conditionLabel={conditionLabel} />
           </View>
-          <View style={{ marginVertical: spacing.lg }}>
+          <View
+            style={{ marginVertical: spacing.lg }}
+            className={`${Platform.OS === "web" ? "sm:mx-auto" : ""}`}
+          >
             {hourlyData.length > 0 ? <HourlyStrip hourlyData={hourlyData} unit={unit} /> : null}
           </View>
           <View style={{ marginVertical: spacing.lg }}>

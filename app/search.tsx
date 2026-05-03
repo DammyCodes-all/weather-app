@@ -1,4 +1,5 @@
-import { View, StyleSheet } from "react-native";
+import { Pressable, View, StyleSheet, Platform } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
@@ -22,7 +23,6 @@ export default function SearchScreen() {
   const searchTimeout = useRef<any | null>(null);
   const { setCoords } = useWeatherStore();
 
-  // Load recent searches on mount
   useEffect(() => {
     loadRecentSearches().then(setRecentSearches);
   }, []);
@@ -79,9 +79,26 @@ export default function SearchScreen() {
     <ScreenWrapper>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Typography variant="display" size="lg" color={colors.textPrimary}>
+          {Platform.OS === "web" ? (
+            <Pressable
+              onPress={() => router.back()}
+              style={styles.backButton}
+              className="hover:bg-white/20 rounded-lg flex items-center justify-center"
+            >
+              <MaterialCommunityIcons name="arrow-left" size={18} color={colors.textPrimary} />
+            </Pressable>
+          ) : (
+            <View style={styles.headerSideSpacer} />
+          )}
+          <Typography
+            variant="display"
+            size="lg"
+            color={colors.textPrimary}
+            style={styles.headerTitle}
+          >
             Find the weather in other locations
           </Typography>
+          <View style={styles.headerSideSpacer} />
         </View>
 
         <SearchInput query={query} onQueryChange={handleSearch} />
@@ -105,7 +122,22 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: spacing.lg,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+  },
+  headerSideSpacer: {
+    width: 36,
+    height: 36,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    padding: 6,
   },
 });

@@ -45,6 +45,7 @@ export function Skeleton({ width, height, borderRadius = 8 }: SkeletonProps) {
         },
         animatedStyle,
       ]}
+      className={`my-1`}
     />
   );
 }
