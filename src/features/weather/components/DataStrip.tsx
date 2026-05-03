@@ -1,39 +1,29 @@
-import { BlurView } from 'expo-blur';
-import { MotiView } from 'moti';
-import { StyleSheet, View } from 'react-native';
+import { BlurView } from "expo-blur";
+import { StyleSheet, View } from "react-native";
+import Animated, { FadeInUp } from "react-native-reanimated";
 
-import { Typography } from '@/components/Typography';
-import { colors, radius, spacing } from '@/theme';
-import { formatHumidity, formatTemp, formatWindSpeed } from '@/utils/formatters';
+import { Typography } from "@/components/Typography";
+import { colors, radius, spacing } from "@/theme";
+import { formatHumidity, formatTemp, formatWindSpeed } from "@/utils/formatters";
 
 interface DataStripProps {
   humidity: number;
   windSpeed: number;
   feelsLike: number;
-  unit: 'C' | 'F';
+  unit: "C" | "F";
 }
 
-const stripItems = (
-  humidity: number,
-  windSpeed: number,
-  feelsLike: number,
-  unit: 'C' | 'F',
-) => [
-  { label: 'HUMIDITY', value: formatHumidity(humidity) },
-  { label: 'WIND', value: formatWindSpeed(windSpeed) },
-  { label: 'FEELS LIKE', value: formatTemp(feelsLike, unit) },
+const stripItems = (humidity: number, windSpeed: number, feelsLike: number, unit: "C" | "F") => [
+  { label: "HUMIDITY", value: formatHumidity(humidity) },
+  { label: "WIND", value: formatWindSpeed(windSpeed) },
+  { label: "FEELS LIKE", value: formatTemp(feelsLike, unit) },
 ];
 
 export function DataStrip({ humidity, windSpeed, feelsLike, unit }: DataStripProps) {
   const items = stripItems(humidity, windSpeed, feelsLike, unit);
 
   return (
-    <MotiView
-      from={{ opacity: 0, translateY: 10 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: 'timing', duration: 500, delay: 500 }}
-      style={styles.wrapper}
-    >
+    <Animated.View entering={FadeInUp.duration(500).delay(500)} style={styles.wrapper}>
       <BlurView intensity={20} tint="dark" style={styles.blur}>
         <View style={styles.row}>
           {items.map((item, index) => (
@@ -54,30 +44,30 @@ export function DataStrip({ humidity, windSpeed, feelsLike, unit }: DataStripPro
           ))}
         </View>
       </BlurView>
-    </MotiView>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
-    width: '100%',
+    width: "100%",
   },
   blur: {
-    overflow: 'hidden',
+    overflow: "hidden",
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.textGhost,
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
+    flexDirection: "row",
+    alignItems: "stretch",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
   },
   item: {
     flex: 1,
-    justifyContent: 'center',
-    position: 'relative',
+    justifyContent: "center",
+    position: "relative",
     paddingHorizontal: spacing.sm,
   },
   itemLabel: {
@@ -85,7 +75,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   divider: {
-    position: 'absolute',
+    position: "absolute",
     right: 0,
     top: 4,
     bottom: 4,

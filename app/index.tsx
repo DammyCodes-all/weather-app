@@ -1,8 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { MotiView } from "moti";
 import { useEffect } from "react";
 import {
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import Animated, {
+  FadeInUp,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
@@ -130,17 +131,19 @@ export default function HomeScreen() {
           <ConditionBackground conditionCode={conditionCode} isDay={isDay} />
           <OfflineBanner isOnline={isOnline} />
           <View className="flex-1 items-center justify-center px-8">
-            <Typography variant="display" size="2xl" color={colors.textPrimary}>
-              location access declined.
-            </Typography>
-            <Typography
-              variant="mono"
-              size="sm"
-              color={colors.textMuted}
-              style={{ marginTop: 12, letterSpacing: 1.2, textAlign: "center" }}
-            >
-              search for a city to get started
-            </Typography>
+            <Animated.View entering={FadeInUp.duration(500)}>
+              <Typography variant="display" size="2xl" color={colors.textPrimary}>
+                location access declined.
+              </Typography>
+              <Typography
+                variant="mono"
+                size="sm"
+                color={colors.textMuted}
+                style={{ marginTop: 12, letterSpacing: 1.2, textAlign: "center" }}
+              >
+                search for a city to get started
+              </Typography>
+            </Animated.View>
             <Pressable onPress={() => router.push("/search")} style={styles.searchPrompt}>
               <Typography variant="label" size="sm" color={colors.accent}>
                 open city search
@@ -190,11 +193,7 @@ export default function HomeScreen() {
         <View className="flex-1">
           <ConditionBackground conditionCode={conditionCode} isDay={isDay} />
           <View className="flex-1 items-center justify-center px-8">
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: "timing", duration: 500 }}
-            >
+            <Animated.View entering={FadeInUp.duration(500)}>
               <Typography variant="display" size="2xl" color={colors.textPrimary}>
                 {title}
               </Typography>
@@ -210,7 +209,7 @@ export default function HomeScreen() {
               >
                 {subtitle}
               </Typography>
-            </MotiView>
+            </Animated.View>
             {showRetry ? (
               <Pressable onPress={handleRefresh} style={{ marginTop: 18 }}>
                 <Typography variant="label" size="sm" color={colors.accent}>
@@ -291,7 +290,7 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
           <View
-            className="flex-1 items-center justify-center"
+            className={`flex-1 items-center justify-center my-4 ${Platform.OS === "web" ? "flex-col gap-4" : ""}`}
             style={[styles.heroWrap, isWide ? styles.heroWide : styles.heroStack]}
           >
             <WeatherIcon conditionCode={conditionCode} isDay={isDay} size={180} />
