@@ -261,9 +261,16 @@ export default function HomeScreen() {
               </View>
 
               <View style={styles.topActions}>
-                <View style={styles.unitToggle}>
+                <View
+                  style={styles.unitToggle}
+                  className="web:hover:opacity-80 web:hover:scale-105 web:transition-all web:duration-200"
+                >
                   <Animated.View style={[styles.unitActiveIndicator, indicatorStyle]} />
-                  <Pressable style={styles.unitOption} onPress={() => handleUnitChange("C")}>
+                  <Pressable
+                    style={styles.unitOption}
+                    className="web:hover:opacity-80 web:hover:scale-105 web:transition-all web:duration-200"
+                    onPress={() => handleUnitChange("C")}
+                  >
                     <Typography
                       variant="label"
                       size="xs"
@@ -272,7 +279,11 @@ export default function HomeScreen() {
                       °C
                     </Typography>
                   </Pressable>
-                  <Pressable style={styles.unitOption} onPress={() => handleUnitChange("F")}>
+                  <Pressable
+                    style={styles.unitOption}
+                    className="web:hover:opacity-80 web:hover:scale-105 web:transition-all web:duration-200"
+                    onPress={() => handleUnitChange("F")}
+                  >
                     <Typography
                       variant="label"
                       size="xs"
@@ -283,7 +294,11 @@ export default function HomeScreen() {
                   </Pressable>
                 </View>
 
-                <Pressable hitSlop={10} onPress={() => router.push("/search")}>
+                <Pressable
+                  hitSlop={10}
+                  onPress={() => router.push("/search")}
+                  className="web:hover:bg-white/20 p-1 flex items justify-center flex-row rounded-lg web:hover:scale-110 web:transition-all web:duration-200"
+                >
                   <MaterialCommunityIcons name="magnify" size={24} color={colors.textPrimary} />
                 </Pressable>
               </View>
