@@ -1,7 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { QueryClient } from '@tanstack/react-query';
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { persistQueryClient } from '@tanstack/react-query-persist-client';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { QueryClient } from "@tanstack/react-query";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { persistQueryClient } from "@tanstack/react-query-persist-client";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -13,13 +13,17 @@ export const queryClient = new QueryClient({
   },
 });
 
-const asyncStoragePersister = createAsyncStoragePersister({
-  storage: AsyncStorage,
-  key: '@weather/query-cache',
-});
+const canUseWindow = typeof window !== "undefined";
 
-persistQueryClient({
-  queryClient,
-  persister: asyncStoragePersister,
-  maxAge: 24 * 60 * 60 * 1000,
-});
+if (canUseWindow) {
+  const asyncStoragePersister = createAsyncStoragePersister({
+    storage: AsyncStorage,
+    key: "@weather/query-cache",
+  });
+
+  persistQueryClient({
+    queryClient,
+    persister: asyncStoragePersister,
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+}
