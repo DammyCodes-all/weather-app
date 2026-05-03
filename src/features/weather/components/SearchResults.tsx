@@ -1,10 +1,11 @@
-import { MotiView, View } from "moti";
-import { Pressable, StyleSheet, FlatList } from "react-native";
+import { View, Pressable, StyleSheet, FlatList } from "react-native";
 import * as Haptics from "expo-haptics";
+import Animated, { FadeInLeft } from "react-native-reanimated";
 
 import { GeocodingResult } from "@/features/weather/api/weatherApi";
 import { colors, spacing } from "@/theme";
 import { Typography } from "@/components/Typography";
+import { Skeleton } from "@/components/Skeleton";
 
 interface SearchResultsProps {
   results: GeocodingResult[];
@@ -18,14 +19,7 @@ export function SearchResults({ results, onSelectCity, isLoading }: SearchResult
       <FlatList
         data={Array(5).fill(0)}
         keyExtractor={(_, index) => index.toString()}
-        renderItem={() => (
-          <MotiView
-            from={{ opacity: 0.15 }}
-            animate={{ opacity: 0.4 }}
-            transition={{ loop: true, duration: 1200 }}
-            style={styles.skeleton}
-          />
-        )}
+        renderItem={() => <Skeleton width="100%" height={40} borderRadius={8} />}
       />
     );
   }
@@ -45,11 +39,7 @@ export function SearchResults({ results, onSelectCity, isLoading }: SearchResult
       data={results}
       keyExtractor={(item) => `${item.lat}-${item.lon}`}
       renderItem={({ item, index }) => (
-        <MotiView
-          from={{ opacity: 0, translateX: -15 }}
-          animate={{ opacity: 1, translateX: 0 }}
-          transition={{ delay: index * 50 }}
-        >
+        <Animated.View entering={FadeInLeft.delay(index * 50).duration(250)}>
           <Pressable
             style={styles.resultItem}
             onPress={async () => {
@@ -65,7 +55,7 @@ export function SearchResults({ results, onSelectCity, isLoading }: SearchResult
             </Typography>
           </Pressable>
           <View style={styles.divider} />
-        </MotiView>
+        </Animated.View>
       )}
       style={{ flex: 1 }}
     />
@@ -88,12 +78,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     height: 120,
-  },
-  skeleton: {
-    height: 40,
-    backgroundColor: colors.surface2,
-    marginVertical: spacing.xs,
-    marginHorizontal: spacing.lg,
-    borderRadius: 8,
   },
 });

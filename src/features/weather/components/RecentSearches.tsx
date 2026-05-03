@@ -1,6 +1,6 @@
 import { View, StyleSheet, Pressable } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { MotiView } from "moti";
+import Animated, { ZoomIn } from "react-native-reanimated";
 import { useEffect, useState } from "react";
 
 import { GeocodingResult } from "@/features/weather/api/weatherApi";
@@ -41,30 +41,23 @@ export function RecentSearches({ onRemove, onSelect, onRemoveComplete }: RecentS
       </Typography>
       <View style={styles.chipContainer}>
         {recentSearches.map((city, index) => (
-          <MotiView
-            from={{ scale: 0.85, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+          <Animated.View
             key={`${city.lat}-${city.lon}`}
             style={styles.chip}
+            entering={ZoomIn.duration(180)}
           >
-            <Pressable
-              style={styles.chipContent}
-              onPress={() => onSelect(city)}
-            >
+            <Pressable style={styles.chipContent} onPress={() => onSelect(city)}>
               <Typography variant="label" size="sm" color={colors.textPrimary}>
                 {city.name}
-                {city.state ? `, ${city.state}` : ''}
+                {city.state ? `, ${city.state}` : ""}
               </Typography>
             </Pressable>
-            <Pressable
-              style={styles.removeButton}
-              onPress={() => onRemoveComplete(index)}
-            >
+            <Pressable style={styles.removeButton} onPress={() => onRemoveComplete(index)}>
               <Typography variant="label" size="sm" color={colors.textMuted}>
                 ×
               </Typography>
             </Pressable>
-          </MotiView>
+          </Animated.View>
         ))}
       </View>
     </View>

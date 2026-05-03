@@ -1,5 +1,5 @@
-import { MotiView } from "moti";
 import { ScrollView, StyleSheet, View } from "react-native";
+import Animated, { FadeInRight } from "react-native-reanimated";
 
 import { Typography } from "@/components/Typography";
 import { WeatherIcon } from "@/features/weather/components/WeatherIcon";
@@ -11,17 +11,6 @@ interface HourlyStripProps {
   hourlyData: HourlyItem[];
   unit: "C" | "F";
 }
-
-/**
- * Horizontal scrollable strip showing next 8 hours of hourly forecast
- *
- * Each item displays: hour label (e.g., "3 PM") → weather icon (40px) → temperature
- * Current hour (first item) has an accent left border to highlight it.
- *
- * Animation: Each item stagger-enters from right (translateX: 15 → 0) with 60ms
- * delays between items, creating a smooth sequential reveal. Direction matches
- * the horizontal scroll direction, so animation feels natural.
- */
 export function HourlyStrip({ hourlyData, unit }: HourlyStripProps) {
   return (
     <ScrollView
@@ -35,11 +24,9 @@ export function HourlyStrip({ hourlyData, unit }: HourlyStripProps) {
         const isCurrentHour = index === 0;
 
         return (
-          <MotiView
+          <Animated.View
             key={`${item.dt}-${index}`}
-            from={{ opacity: 0, translateX: 15 }}
-            animate={{ opacity: 1, translateX: 0 }}
-            transition={{ type: "timing", duration: 500, delay: index * 60 }}
+            entering={FadeInRight.delay(index * 60).duration(300)}
           >
             <View style={[styles.item, isCurrentHour && styles.itemCurrent]}>
               {/* Hour label: e.g., "3 PM" */}
@@ -54,23 +41,15 @@ export function HourlyStrip({ hourlyData, unit }: HourlyStripProps) {
 
               {/* Weather icon (40px) */}
               <View style={styles.iconWrap}>
-                <WeatherIcon
-                  conditionCode={item.conditionCode}
-                  isDay={item.isDay}
-                  size={40}
-                />
+                <WeatherIcon conditionCode={item.conditionCode} isDay={item.isDay} size={40} />
               </View>
 
               {/* Temperature */}
-              <Typography
-                variant="display"
-                size="sm"
-                color={colors.textPrimary}
-              >
+              <Typography variant="display" size="sm" color={colors.textPrimary}>
                 {formatTemp(item.temp, unit)}
               </Typography>
             </View>
-          </MotiView>
+          </Animated.View>
         );
       })}
     </ScrollView>

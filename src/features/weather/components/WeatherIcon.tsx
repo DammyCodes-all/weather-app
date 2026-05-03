@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { MotiView } from "moti";
+import Animated, { ZoomIn } from "react-native-reanimated";
 
 import { colors } from "@/theme";
 import { getConditionMeta } from "@/utils/conditionMap";
@@ -26,12 +26,8 @@ export function WeatherIcon({
   }
 
   return (
-    <MotiView
-      from={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: "spring", damping: 15 }}
-    >
+    <Animated.View entering={ZoomIn.duration(250)}>
       <MaterialCommunityIcons name={iconName} size={size} color={color} />
-    </MotiView>
+    </Animated.View>
   );
 }
