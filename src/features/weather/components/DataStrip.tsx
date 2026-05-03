@@ -1,5 +1,5 @@
 import { BlurView } from "expo-blur";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
 
 import { Typography } from "@/components/Typography";
@@ -21,29 +21,56 @@ const stripItems = (humidity: number, windSpeed: number, feelsLike: number, unit
 
 export function DataStrip({ humidity, windSpeed, feelsLike, unit }: DataStripProps) {
   const items = stripItems(humidity, windSpeed, feelsLike, unit);
+  const isWeb = Platform.OS === "web";
 
   return (
     <Animated.View entering={FadeInUp.duration(500).delay(500)} style={styles.wrapper}>
-      <BlurView intensity={20} tint="dark" style={styles.blur}>
-        <View style={styles.row}>
-          {items.map((item, index) => (
-            <View key={item.label} style={styles.item}>
-              <Typography
-                variant="label"
-                size="xs"
-                color={colors.textMuted}
-                style={styles.itemLabel}
-              >
-                {item.label}
-              </Typography>
-              <Typography variant="mono" size="base" color={colors.textPrimary}>
-                {item.value}
-              </Typography>
-              {index < items.length - 1 ? <View style={styles.divider} /> : null}
-            </View>
-          ))}
+      {isWeb ? (
+        <View
+          style={[styles.blur]}
+          className={`${Platform.OS === "web" ? "backdrop-blur-[1.5px] bg-transparent" : ""}`}
+        >
+          <View style={styles.row}>
+            {items.map((item, index) => (
+              <View key={item.label} style={styles.item}>
+                <Typography
+                  variant="label"
+                  size="xs"
+                  color={colors.textMuted}
+                  style={styles.itemLabel}
+                >
+                  {item.label}
+                </Typography>
+                <Typography variant="mono" size="base" color={colors.textPrimary}>
+                  {item.value}
+                </Typography>
+                {index < items.length - 1 ? <View style={styles.divider} /> : null}
+              </View>
+            ))}
+          </View>
         </View>
-      </BlurView>
+      ) : (
+        <BlurView intensity={20} tint="dark" style={styles.blur}>
+          <View style={styles.row}>
+            {items.map((item, index) => (
+              <View key={item.label} style={styles.item}>
+                <Typography
+                  variant="label"
+                  size="xs"
+                  color={colors.textMuted}
+                  style={styles.itemLabel}
+                >
+                  {item.label}
+                </Typography>
+                <Typography variant="mono" size="base" color={colors.textPrimary}>
+                  {item.value}
+                </Typography>
+                {index < items.length - 1 ? <View style={styles.divider} /> : null}
+              </View>
+            ))}
+          </View>
+        </BlurView>
+      )}
     </Animated.View>
   );
 }

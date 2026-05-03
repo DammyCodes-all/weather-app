@@ -19,6 +19,7 @@ export function SearchResults({ results, onSelectCity, isLoading }: SearchResult
       <FlatList
         data={Array(5).fill(0)}
         keyExtractor={(_, index) => index.toString()}
+        className="mx-6 flex flex-col gap-2"
         renderItem={() => <Skeleton width="100%" height={40} borderRadius={8} />}
       />
     );

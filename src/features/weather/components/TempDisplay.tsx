@@ -16,7 +16,7 @@ export function TempDisplay({ tempKelvin, unit, conditionLabel }: TempDisplayPro
 
   const displaySize =
     Platform.OS === "web"
-      ? Dimensions.get("window").width * 0.15
+      ? Dimensions.get("window").width * 0.12
       : Dimensions.get("window").width * 0.27;
 
   return (
@@ -49,7 +49,8 @@ export function TempDisplay({ tempKelvin, unit, conditionLabel }: TempDisplayPro
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
+    alignItems: Platform.OS === "web" ? "center" : "center",
+    gap: Platform.OS === "web" ? 15 : 0,
     flexDirection: "column",
   },
   temperatureBlock: {
