@@ -1,1 +1,4 @@
+allowBuilds:
+  electron: true
+  unrs-resolver: true
 nodeLinker: hoisted

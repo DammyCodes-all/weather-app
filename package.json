@@ -8,7 +8,11 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "desktop": "electron main.js --no-sandbox",
+    "build:desktop": "npx expo export --platform web && electron main.js",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "dependencies": {
     "@expo-google-fonts/dm-serif-display": "^0.4.2",
@@ -25,6 +29,7 @@
     "@tanstack/react-query-persist-client": "^5.100.5",
     "axios": "^1.15.2",
     "dayjs": "^1.11.20",
+    "electron-squirrel-startup": "^1.0.1",
     "expo": "~54.0.33",
     "expo-blur": "~15.0.8",
     "expo-constants": "~18.0.13",
@@ -54,11 +59,43 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^7.11.1",
+    "@electron-forge/maker-deb": "^7.11.1",
+    "@electron-forge/maker-zip": "^7.11.1",
     "@types/react": "~19.1.0",
+    "electron": "^41.5.0",
+    "electron-serve": "^3.0.1",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "tailwindcss": "3.3.2",
     "typescript": "~5.9.2"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "prune": false,
+        "ignore": [
+          "\\.git",
+          "\\.github",
+          "/scripts",
+          "/ios",
+          "/android",
+          "/assets"
+        ]
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "linux"
+          ]
+        }
+      ]
+    }
   },
   "private": true
 }
