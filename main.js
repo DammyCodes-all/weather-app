@@ -3,6 +3,10 @@ import serve from "electron-serve";
 
 const loadURL = serve({ directory: "dist" });
 
+if (process.env.APPIMAGE) {
+  app.commandLine.appendSwitch("no-sandbox");
+}
+
 async function createWindow() {
   const win = new BrowserWindow({
     width: 1200,

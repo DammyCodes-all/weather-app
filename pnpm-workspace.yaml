@@ -1,4 +1,5 @@
 allowBuilds:
   electron: true
+  electron-winstaller: false
   unrs-resolver: true
 nodeLinker: hoisted
