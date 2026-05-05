@@ -2,6 +2,12 @@
 
 A sleek, modern weather application built with React Native and Expo, featuring a dark cosmic brutalism aesthetic, real-time weather data, and comprehensive offline capabilities.
 
+[Link to the web app]("https://aluminate-weather-app.expo.app/")
+
+[Link to desktop build and video]("https://drive.google.com/drive/folders/1wOvA8W3Dev_cCDIkAFj63lMm-NP1rvEM?usp=drive_link")
+
+[Link to appetize]("https://appetize.io/app/b_bwtsmlpqg2svypa4abdesa6yie")
+
 ## 📋 Table of Contents
 
 - [Overview](#overview)
@@ -16,6 +22,7 @@ A sleek, modern weather application built with React Native and Expo, featuring 
 - [Setup & Installation](#setup--installation)
 - [Development](#development)
 - [Building](#building)
+- [Desktop Availability](#desktop-availability)
 - [Environment Variables](#environment-variables)
 
 ## 🌟 Overview
@@ -629,6 +636,48 @@ xcodebuild -workspace ios/weatherapp.xcworkspace -scheme weatherapp
 cd android && ./gradlew build && cd ..
 ```
 
+## 🖥️ Desktop Availability
+
+The app is also available as a Linux desktop application through Electron.
+
+### Supported Desktop Packages
+
+- **Debian package (`.deb`)**: Recommended for Ubuntu, Debian, and compatible distributions.
+- **AppImage (`.AppImage`)**: Portable Linux build. It may require additional system configuration on some newer distributions.
+- **ZIP archive**: Portable extracted Linux build for manual use.
+
+### Build Desktop Packages
+
+```bash
+# Export the Expo web build and create Linux desktop installers
+pnpm run make
+```
+
+Generated desktop artifacts are written to:
+
+```text
+out/make/
+```
+
+### Linux AppImage Sandbox Note
+
+Some newer Linux distributions, especially Ubuntu 24.04 and related AppArmor-based systems, can block Electron AppImages from starting with an error like:
+
+```text
+The SUID sandbox helper binary was found, but is not configured correctly.
+You need to make sure that .../chrome-sandbox is owned by root and has mode 4755.
+```
+
+This is a known Electron AppImage sandbox/user-namespace issue, not a weather app runtime error. The `.deb` package is the recommended install method for Ubuntu/Debian users because it avoids this AppImage-specific launch problem.
+
+Possible AppImage workarounds:
+
+- Run the AppImage from a terminal with `--no-sandbox`.
+- Create an AppArmor profile that allows the AppImage to use unprivileged user namespaces.
+- Use a distribution/version that allows Electron AppImage sandboxing by default.
+
+Use `--no-sandbox` only when you understand the security tradeoff. Electron documents this flag as disabling Chromium sandboxing.
+
 ## 🔑 Environment Variables
 
 ### Required Variables
@@ -691,6 +740,11 @@ cd android && ./gradlew build && cd ..
 - Rebuild Tailwind: `pnpm start -- --clear`
 - Clear NativeWind cache: `rm -rf node_modules/.cache`
 - Restart Metro bundler
+
+### AppImage Does Not Start
+- Prefer the generated `.deb` package on Ubuntu/Debian.
+- If the terminal error mentions `chrome-sandbox` and mode `4755`, see [Linux AppImage Sandbox Note](#linux-appimage-sandbox-note).
+- If the error mentions FUSE, install the distro's FUSE compatibility package, such as `libfuse2` or `libfuse2t64`.
 
 ## 👥 Contributors
 

@@ -1,7 +1,7 @@
 {
   "name": "weather-app",
-  "type": "module",
-  "main": "main.js",
+  "type": "commonjs",
+  "main": "expo-router/entry",
   "version": "1.0.0",
   "description": "A high-performance weather tracking desktop and mobile application built with Expo and Electron.",
   "author": "Olagunju Al-ameen",
